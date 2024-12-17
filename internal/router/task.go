@@ -1,7 +1,7 @@
 package router
 
 
-import "mizito/internal/handlers"
+import handlers "mizito/internal/handlers/http"
 
 func InitTask(r *Router) {
 	tHandler := handlers.NewTaskRepository()

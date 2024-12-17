@@ -1,8 +1,8 @@
 package router
 
 
+import handlers "mizito/internal/handlers/http"
 
-import "mizito/internal/handlers"
 
 func InitUser(r *Router) {
 	uHandler := handlers.NewUserRepository()

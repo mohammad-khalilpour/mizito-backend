@@ -2,7 +2,7 @@ package router
 
 
 
-import "mizito/internal/handlers"
+import handlers "mizito/internal/handlers/http"
 
 func InitSubtask(r *Router) {
 	sHandler := handlers.NewSubtaskRepository()
