@@ -2,6 +2,7 @@ package sockets
 
 import (
 	wsmanager "mizito/pkg/websocket"
+	"strconv"
 
 	"github.com/gofiber/contrib/websocket"
 )
@@ -20,10 +21,12 @@ type Event struct {
 
 
 func (chm ChannelHandler) Register (c *websocket.Conn) {
-	id := c.Params("id")
+	sid := c.Params("id")
+	// middleware checks id being integer
+	id, _ := strconv.ParseInt(sid, 10, 32)
 
-	chm.socketManager.AddSocket(id, c)
-	defer chm.socketManager.RemoveSocket(id)
+	chm.socketManager.AddSocket(int(id), c)
+	defer chm.socketManager.RemoveSocket(int(id))
 
 
 	for {
