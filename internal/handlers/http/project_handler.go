@@ -1,0 +1,38 @@
+package http_handlers
+
+import (
+	"github.com/gofiber/fiber/v2"
+)
+
+
+type ProjectRepository interface {
+	GetProjectsByUser(ctx *fiber.Ctx) error
+	CreateProject(ctx *fiber.Ctx) error
+	GetProjectByID(ctx *fiber.Ctx)	error
+	UpdateProject(ctx *fiber.Ctx) error
+	DeleteProject(ctx *fiber.Ctx) error
+}
+
+func NewProjectRepository() ProjectRepository{
+	return &projectRepository{}
+}
+
+type projectRepository struct {
+	
+}
+
+func (pr *projectRepository) GetProjectsByUser(ctx *fiber.Ctx) error {
+	return nil
+}
+func (pr *projectRepository) CreateProject(ctx *fiber.Ctx) error {
+	return nil
+}
+func (pr *projectRepository) GetProjectByID(ctx *fiber.Ctx) error {
+	return nil
+}
+func (pr *projectRepository) UpdateProject(ctx *fiber.Ctx) error {
+	return nil
+}
+func (pr *projectRepository) DeleteProject(ctx *fiber.Ctx) error {
+	return nil
+}

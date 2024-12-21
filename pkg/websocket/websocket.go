@@ -32,8 +32,7 @@ type NotificationMessage struct {
 
 type ChannelManager interface {
 	WebSocketManager
-	NotificationRouter
-}
+	NotificationRouter}
 
 type channelManager struct {
 	sockets map[int]*websocket.Conn
