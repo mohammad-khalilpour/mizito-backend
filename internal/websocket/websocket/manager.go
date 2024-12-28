@@ -1,22 +1,18 @@
-package sockets
+package websocket
 
 import (
-	wsmanager "mizito/pkg/websocket"
-	"strconv"
-
-	"github.com/gofiber/contrib/websocket"
+	"strconv"	
 )
+
+import "github.com/gofiber/contrib/websocket"
 
 
 
 type ChannelHandler struct {
-	socketManager wsmanager.ChannelManager
+	socketManager ChannelManager
+	eventChan chan<- ChannelMessage
 }
 
-
-type Event struct {
-
-}
 
 
 
@@ -31,13 +27,12 @@ func (chm ChannelHandler) Register (c *websocket.Conn) {
 
 	for {
 
-		var e Event
+		var e ChannelMessage
 		if err := c.ReadJSON(&e); err != nil {
 			return
 		}
-		//DO THE REST
-
-
+		chm.eventChan <- e
+		
 	}
 
 

@@ -5,12 +5,19 @@ import (
 )
 
 
+
+type ProjectCrudRepository interface {
+	
+}
+
 type ProjectRepository interface {
 	GetProjectsByUser(ctx *fiber.Ctx) error
 	CreateProject(ctx *fiber.Ctx) error
 	GetProjectByID(ctx *fiber.Ctx)	error
 	UpdateProject(ctx *fiber.Ctx) error
 	DeleteProject(ctx *fiber.Ctx) error
+	AddUserToProject(ctx *fiber.Ctx) error
+	AssignTask(ctx *fiber.Ctx) error
 }
 
 func NewProjectRepository() ProjectRepository{
@@ -34,5 +41,11 @@ func (pr *projectRepository) UpdateProject(ctx *fiber.Ctx) error {
 	return nil
 }
 func (pr *projectRepository) DeleteProject(ctx *fiber.Ctx) error {
+	return nil
+}
+func (pr *projectRepository) AddUserToProject(ctx *fiber.Ctx) error {
+	return nil
+}
+func (pr *projectRepository) AssignTask(ctx *fiber.Ctx) error {
 	return nil
 }
