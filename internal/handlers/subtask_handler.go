@@ -1,4 +1,4 @@
-package http_handlers
+package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -12,17 +12,12 @@ type SubtaskRepository interface {
 	DeleteSubtask(ctx *fiber.Ctx) error
 }
 
-
-
 type subtaskRepository struct {
-
 }
 
-
-func NewSubtaskRepository() SubtaskRepository{
+func NewSubtaskRepository() SubtaskRepository {
 	return &subtaskRepository{}
 }
-
 
 func (pr *subtaskRepository) GetSubtasksByTask(ctx *fiber.Ctx) error {
 	return nil

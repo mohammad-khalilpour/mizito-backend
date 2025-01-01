@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"fmt"
+	"mizito/pkg/models/dtos"
 	"sync"
 
 	"github.com/gofiber/contrib/websocket"
@@ -12,45 +13,31 @@ type ChannelManager interface {
 	EventRouter
 }
 
-
-type ChannelMessage struct {
-	Event *Event
-	Ids []int
-}
-
-
-
 type channelManager struct {
 	sockets sync.Map
 }
 
+func NewChannelManager(size int) ChannelManager {
 
-func NewChannelManager(size int) ChannelManager{
-
-
-	return &channelManager{
-		
-	}
+	return &channelManager{}
 }
 
-func (m *channelManager) AddSocket(id int, conn *websocket.Conn){
+func (m *channelManager) AddSocket(id int, conn *websocket.Conn) {
 	m.sockets.Store(id, conn)
 }
 
-func (m *channelManager) RemoveSocket(id int) error{
+func (m *channelManager) RemoveSocket(id int) error {
 
 	if _, ok := m.sockets.Load(id); !ok {
 		return fmt.Errorf("socket with id %d not found", id)
 	}
-
 
 	m.sockets.Delete(id)
 
 	return nil
 }
 
-
-func (m *channelManager) GetSocketByID(id int) (*websocket.Conn, error){
+func (m *channelManager) GetSocketByID(id int) (*websocket.Conn, error) {
 	sck, ok := m.sockets.Load(id)
 	if !ok {
 		return nil, fmt.Errorf("no such key %d found", id)
@@ -62,8 +49,7 @@ func (m *channelManager) GetSocketByID(id int) (*websocket.Conn, error){
 	return conn, nil
 }
 
-
-func (m *channelManager) Publish(ch <-chan *ChannelMessage) {
+func (m *channelManager) Publish(ch <-chan *dtos.EventMessage) {
 
 	for msg := range ch {
 		for id := range msg.Ids {
@@ -72,7 +58,7 @@ func (m *channelManager) Publish(ch <-chan *ChannelMessage) {
 	}
 }
 
-func (m *channelManager) publishEvent(msg *Event, id int) {
+func (m *channelManager) publishEvent(msg *dtos.Event, id int) {
 	if conn, err := m.GetSocketByID(id); err != nil {
 		// log error and continue
 	} else {

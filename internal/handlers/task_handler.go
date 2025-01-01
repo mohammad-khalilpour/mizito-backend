@@ -1,10 +1,8 @@
-package http_handlers
+package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
 )
-
-
 
 type TaskRepository interface {
 	GetTasksByProject(ctx *fiber.Ctx) error
@@ -14,15 +12,12 @@ type TaskRepository interface {
 	DeleteTask(ctx *fiber.Ctx) error
 }
 
-
 type taskRepository struct {
-	
 }
 
-func NewTaskRepository() TaskRepository{
+func NewTaskRepository() TaskRepository {
 	return &taskRepository{}
 }
-
 
 func (pr *taskRepository) GetTasksByProject(ctx *fiber.Ctx) error {
 	return nil

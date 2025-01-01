@@ -1,9 +1,8 @@
 package router
 
-import handlers "mizito/internal/handlers/http"
-
-
-
+import (
+	"mizito/internal/handlers"
+)
 
 func InitProject(r *Router) {
 	pHandler := handlers.NewProjectRepository()
@@ -13,7 +12,6 @@ func InitProject(r *Router) {
 	projectsApp.Get("/:project_id", pHandler.GetProjectByID)
 	projectsApp.Put("/:project_id", pHandler.UpdateProject)
 	projectsApp.Delete("/:project_id")
-
 
 	projectApp := r.app.Group("project")
 	projectApp.Post("/project", pHandler.CreateProject)

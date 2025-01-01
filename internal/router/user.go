@@ -1,8 +1,8 @@
 package router
 
-
-import handlers "mizito/internal/handlers/http"
-
+import (
+	"mizito/internal/handlers"
+)
 
 func InitUser(r *Router) {
 	uHandler := handlers.NewUserRepository()
@@ -12,7 +12,6 @@ func InitUser(r *Router) {
 	TaskApp.Get("/:user_id", uHandler.GetUserByID)
 	TaskApp.Put("/:user_id", uHandler.UpdateUser)
 	TaskApp.Delete("/:user_id")
-
 
 	subtaskApp := r.app.Group("user")
 	subtaskApp.Post("/:user_id", uHandler.CreateUser)

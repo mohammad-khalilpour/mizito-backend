@@ -1,31 +1,27 @@
-package http_handlers
+package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
 )
 
-
-
 type ProjectCrudRepository interface {
-	
 }
 
 type ProjectRepository interface {
 	GetProjectsByUser(ctx *fiber.Ctx) error
 	CreateProject(ctx *fiber.Ctx) error
-	GetProjectByID(ctx *fiber.Ctx)	error
+	GetProjectByID(ctx *fiber.Ctx) error
 	UpdateProject(ctx *fiber.Ctx) error
 	DeleteProject(ctx *fiber.Ctx) error
 	AddUserToProject(ctx *fiber.Ctx) error
 	AssignTask(ctx *fiber.Ctx) error
 }
 
-func NewProjectRepository() ProjectRepository{
+func NewProjectRepository() ProjectRepository {
 	return &projectRepository{}
 }
 
 type projectRepository struct {
-	
 }
 
 func (pr *projectRepository) GetProjectsByUser(ctx *fiber.Ctx) error {

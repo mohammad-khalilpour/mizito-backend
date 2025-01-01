@@ -1,8 +1,8 @@
 package router
 
-
-
-import handlers "mizito/internal/handlers/http"
+import (
+	"mizito/internal/handlers"
+)
 
 func InitSubtask(r *Router) {
 	sHandler := handlers.NewSubtaskRepository()
@@ -12,7 +12,6 @@ func InitSubtask(r *Router) {
 	SubtasksApp.Get("/:subtask_id", sHandler.GetSubtaskByID)
 	SubtasksApp.Put("/:subtask_id", sHandler.UpdateSubtask)
 	SubtasksApp.Delete("/:subtask_id")
-
 
 	subtaskApp := r.app.Group("project")
 	subtaskApp.Post("/subtask:subtask_id", sHandler.CreateSubtask)
