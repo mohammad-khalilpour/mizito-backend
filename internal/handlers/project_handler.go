@@ -5,14 +5,15 @@ import (
 )
 
 type ProjectCrudRepository interface {
-}
-
-type ProjectRepository interface {
-	GetProjectsByUser(ctx *fiber.Ctx) error
-	CreateProject(ctx *fiber.Ctx) error
 	GetProjectByID(ctx *fiber.Ctx) error
 	UpdateProject(ctx *fiber.Ctx) error
 	DeleteProject(ctx *fiber.Ctx) error
+	CreateProject(ctx *fiber.Ctx) error
+}
+
+type ProjectRepository interface {
+	ProjectCrudRepository
+	GetProjectsByUser(ctx *fiber.Ctx) error
 	AddUserToProject(ctx *fiber.Ctx) error
 	AssignTask(ctx *fiber.Ctx) error
 }

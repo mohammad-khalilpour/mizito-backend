@@ -1,6 +1,8 @@
 package websocket
 
 import (
+	"encoding/json"
+	"mizito/internal/database"
 	"mizito/pkg/models/dtos"
 	"strconv"
 )
@@ -8,28 +10,28 @@ import (
 import "github.com/gofiber/contrib/websocket"
 
 type ChannelHandler struct {
-	socketManager ChannelManager
-
-	// all the events received from socket is sent through this channel
-	socketChan chan dtos.EventMessage
-	// used to send events to users we want to broadcast message to
-	// messages that are supposed to broadcast will pass through this
-	eventChan chan<- dtos.EventMessage
-	// channel for storing messages inside db
-	// events published inside the `socketChan` are published to `eventChan` and `messageChan` based on their type
-	// events that are of type message need to be sent to both `eventChan` and `messageChan`
-	messageChan chan dtos.EventMessage
+	socketManager SocketManager
+	RedisClient   database.RedisHandler
+	MongoClient   database.MongoHandler
 }
 
-func (chm ChannelHandler) HandleEvent() {
-	for event := range chm.socketChan {
-		switch event.Event.EventType {
-		case dtos.Message:
-			chm.messageChan <- event
-			chm.eventChan <- event
-		case dtos.Notification:
-			chm.eventChan <- event
+func NewChannelHandler() *ChannelHandler {
+
+	sm := NewSocketHandler()
+	go sm.Publish()
+
+	return &ChannelHandler{
+		socketManager: sm,
+	}
+}
+
+func (chm ChannelHandler) ProcessEvents() {
+	for e := range chm.RedisClient.GetSubscribeChan() {
+		var event dtos.EventMessage
+		if err := json.Unmarshal(e, &event); err != nil {
+			continue
 		}
+		chm.socketManager.AddToPublishChan(&event)
 	}
 }
 
@@ -38,16 +40,25 @@ func (chm ChannelHandler) Register(c *websocket.Conn) {
 	// middleware checks id being integer
 	id, _ := strconv.ParseInt(sid, 10, 32)
 
-	chm.socketManager.AddSocket(int(id), c)
-	defer chm.socketManager.RemoveSocket(int(id))
+	chm.socketManager.AddSocket(uint(id), c)
 
 	for {
-
-		var e dtos.EventMessage
-		if err := c.ReadJSON(&e); err != nil {
-			return
+		var (
+			e    dtos.EventMessage
+			eRaw []byte
+			err  error
+		)
+		if _, eRaw, err = c.ReadMessage(); err != nil {
+			//handle related error
+			continue
 		}
-		chm.eventChan <- e
+		if err := json.Unmarshal(eRaw, &e); err != nil {
+			continue
+		}
+		chm.RedisClient.AddToPublishChan(eRaw)
+		if e.Event.EventType == dtos.Message {
+			chm.MongoClient.StoreMessage(eRaw)
+		}
 
 	}
 

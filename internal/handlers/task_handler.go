@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// task updates require event publishing to clients
 type TaskRepository interface {
 	GetTasksByProject(ctx *fiber.Ctx) error
 	CreateTask(ctx *fiber.Ctx) error

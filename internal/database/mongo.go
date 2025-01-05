@@ -2,18 +2,19 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"mizito/internal/env"
+	"mizito/pkg/models"
+	"time"
+
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
-	"mizito/internal/env"
-	"mizito/pkg/models"
-	"mizito/pkg/models/dtos"
-	"time"
 )
 
 type MongoHandler interface {
-	StoreMessage()
+	StoreMessage(payload []byte)
 
 	//GetMessagesSince takes the userid and a date, returning all the messages sent after the date
 	GetMessagesSince(to uint, sinceDate time.Time)
@@ -22,14 +23,44 @@ type MongoHandler interface {
 type mongoHandler struct {
 	client      *mongo.Client
 	cfg         *env.Config
-	messageChan <-chan dtos.EventMessage
+	messageChan chan bson.M
+	messagesLen int
 }
 
-func (mh *mongoHandler) StoreMessage() {
-	for message := range mh.messageChan {
-		//TODO
-		//Store message objects inside mongodb as documents
+func (mh mongoHandler) StoreMessage(event []byte) {
+	var m map[string]any
+	if err := json.Unmarshal(event, &m); err != nil {
+		return
 	}
+	mh.messageChan <- m
+}
+
+func (mh *mongoHandler) ProcessMessages() {
+
+	var messages []bson.M
+
+	db := mh.client.Database(mh.cfg.MongoDatabase)
+	coll := db.Collection(mh.cfg.MongoCollection)
+
+	for message := range mh.messageChan {
+
+		messages = append(messages, message)
+
+		if len(messages) == mh.messagesLen {
+			go func(messages []bson.M) {
+				ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+				res, errs := coll.InsertMany(ctx, messages)
+				if errs != nil {
+					//handle errors here
+				}
+
+				if !res.Acknowledged {
+					// handle no acknowledge received error
+				}
+			}(messages)
+		}
+	}
+
 }
 
 func (mh *mongoHandler) GetMessagesSince(ctx context.Context, to uint, sinceDate time.Time) error {
@@ -48,6 +79,8 @@ func (mh *mongoHandler) GetMessagesSince(ctx context.Context, to uint, sinceDate
 	if err := c.All(ctx, &messages); err != nil {
 		return fmt.Errorf("failed to cast documents as message type, err : %s", err.Error())
 	}
+
+	return nil
 }
 
 var mongoDB mongoHandler

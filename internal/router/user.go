@@ -7,12 +7,12 @@ import (
 func InitUser(r *Router) {
 	uHandler := handlers.NewUserRepository()
 
-	TaskApp := r.app.Group("/users")
+	TaskApp := r.App.Group("/users")
 	TaskApp.Get("/all", uHandler.GetUsers)
 	TaskApp.Get("/:user_id", uHandler.GetUserByID)
 	TaskApp.Put("/:user_id", uHandler.UpdateUser)
-	TaskApp.Delete("/:user_id")
+	TaskApp.Delete("/:user_id", uHandler.DeleteUser)
 
-	subtaskApp := r.app.Group("user")
+	subtaskApp := r.App.Group("user")
 	subtaskApp.Post("/:user_id", uHandler.CreateUser)
 }

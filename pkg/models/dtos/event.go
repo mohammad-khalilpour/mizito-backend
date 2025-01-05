@@ -14,5 +14,5 @@ type Event struct {
 
 type EventMessage struct {
 	Event *Event
-	Ids   []int
+	Ids   []uint
 }

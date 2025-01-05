@@ -1,18 +1,29 @@
 package router
 
 import (
-	"github.com/allegro/bigcache/v3"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"mizito/internal/env"
+	"mizito/internal/middleware"
 )
 
-
-
 type Router struct {
-	app *fiber.App
-	cache bigcache.BigCache
+	App *fiber.App
+	Cfg *env.Config
 }
 
+func InitApp(cfg *env.Config) *Router {
+	app := fiber.New()
 
+	app.Use(recover.New())
+
+	app.Use("/ws/:id", middleware.UpgradeMiddleware)
+
+	return &Router{
+		App: app,
+		Cfg: cfg,
+	}
+}
 
 func (r *Router) Init() {
 	InitAuth(r)
@@ -20,4 +31,11 @@ func (r *Router) Init() {
 	InitSubtask(r)
 	InitTask(r)
 	InitUser(r)
+	InitSocket(r)
+}
+
+func (r *Router) Run() {
+	if err := r.App.Listen(r.Cfg.AppPort); err != nil {
+		panic(err)
+	}
 }

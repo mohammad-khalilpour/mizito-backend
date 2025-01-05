@@ -7,12 +7,12 @@ import (
 func InitProject(r *Router) {
 	pHandler := handlers.NewProjectRepository()
 
-	projectsApp := r.app.Group("/projects")
+	projectsApp := r.App.Group("/projects")
 	projectsApp.Get("/all", pHandler.GetProjectsByUser)
 	projectsApp.Get("/:project_id", pHandler.GetProjectByID)
 	projectsApp.Put("/:project_id", pHandler.UpdateProject)
-	projectsApp.Delete("/:project_id")
+	projectsApp.Delete("/:project_id", pHandler.DeleteProject)
 
-	projectApp := r.app.Group("project")
+	projectApp := r.App.Group("project")
 	projectApp.Post("/project", pHandler.CreateProject)
 }

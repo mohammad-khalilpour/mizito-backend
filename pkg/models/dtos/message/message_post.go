@@ -1,4 +1,4 @@
-package models
+package message_dto
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 
 type Message struct {
 	Sender uint
-	Project Project
+	Project uint
 	Content []byte
 	CreatedAt time.Time
 }
