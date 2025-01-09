@@ -4,31 +4,30 @@ import (
 	"encoding/json"
 	"fmt"
 	"mizito/internal/database"
+	"mizito/internal/env"
 	"mizito/internal/repositories"
 	"mizito/pkg/models/dtos"
-	message_dto "mizito/pkg/models/dtos/message"
+	messagedto "mizito/pkg/models/dtos/message"
 	"strconv"
 	"time"
 )
 
 import "github.com/gofiber/contrib/websocket"
 
-type ChannelHandler struct {
+type ChannelRepository struct {
 	socketManager SocketManager
-	RedisClient   database.RedisHandler
-	MongoClient   database.MongoHandler
+	messageRepo   repositories.MessageChannelRepository
 	ProjectDetail repositories.ProjectDetail
 }
 
-func NewChannelHandler(redisClient database.RedisHandler, mongoClient database.MongoHandler) *ChannelHandler {
+func NewChannelHandler(redis *database.RedisHandler, mongo *database.MongoHandler, env *env.Config) *ChannelRepository {
 
 	sm := NewSocketHandler()
-	go sm.Publish()
 
-	chHandler := &ChannelHandler{
+	chHandler := &ChannelRepository{
 		socketManager: sm,
-		RedisClient:   redisClient,
-		MongoClient:   mongoClient,
+		messageRepo:   repositories.NewMessageRepository(redis, mongo, env),
+		ProjectDetail: repositories.NewProjectRepository(),
 	}
 
 	go chHandler.ProcessEvents()
@@ -36,22 +35,21 @@ func NewChannelHandler(redisClient database.RedisHandler, mongoClient database.M
 	return chHandler
 }
 
-func (chm ChannelHandler) ProcessEvents() {
-	for e := range chm.RedisClient.GetSubscribeChan() {
-		var event dtos.EventMessage
-		if err := json.Unmarshal(e, &event); err != nil {
-			continue
-		}
+func (chm ChannelRepository) ProcessEvents() {
+	for e := range chm.messageRepo.SubscribeEvent() {
+		var event dtos.WebSocketMessage
+		event.Event = &e
 		if event.Event.EventType == dtos.Message {
 			chm.processMsg(&event)
 		}
-
-		chm.socketManager.AddToPublishChan(&event)
+		fmt.Println("final event is : ", event)
+		chm.socketManager.SendEvent(&event)
 	}
 }
 
-func (chm ChannelHandler) processMsg(event *dtos.EventMessage) {
-	var msg message_dto.Message
+func (chm ChannelRepository) processMsg(event *dtos.WebSocketMessage) {
+	var msg messagedto.Message
+	fmt.Println(event.Event.Payload)
 	if members, err := chm.ProjectDetail.GetProjectMembers(msg.Project); err != nil {
 		// log again for errors
 	} else {
@@ -61,7 +59,7 @@ func (chm ChannelHandler) processMsg(event *dtos.EventMessage) {
 	}
 }
 
-func (chm ChannelHandler) Register(c *websocket.Conn) {
+func (chm ChannelRepository) Register(c *websocket.Conn) {
 	sid := c.Params("id")
 	// middleware checks id being integer
 	id, _ := strconv.ParseInt(sid, 10, 32)
@@ -80,11 +78,13 @@ func (chm ChannelHandler) Register(c *websocket.Conn) {
 			continue
 		}
 		e.Payload.CreatedAt = time.Now()
-		if eRaw, err = json.Marshal(e.Payload); err != nil {
+		if eRaw, err = json.Marshal(e); err != nil {
+			fmt.Println(err.Error())
 			continue
 		}
+
 		if e.EventType == dtos.Message {
-			go chm.MongoClient.StoreMessage(eRaw)
+			go chm.messageRepo.PublishMsg(eRaw)
 
 		}
 

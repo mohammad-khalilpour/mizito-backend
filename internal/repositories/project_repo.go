@@ -50,5 +50,19 @@ func (ph *projectRepository) DeleteProject(projectID uint) (uint, error) {
 	return 0, nil
 }
 func (ph *projectRepository) GetProjectMembers(ProjectID uint) ([]models.TeamMember, error) {
-	return nil, nil
+
+	//this was just for testing, implement as expected
+
+	return []models.TeamMember{
+		models.TeamMember{
+			User: models.User{
+				ID: 2,
+			},
+		},
+		models.TeamMember{
+			User: models.User{
+				ID: 5,
+			},
+		},
+	}, nil
 }

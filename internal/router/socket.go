@@ -3,15 +3,16 @@ package router
 import (
 	"fmt"
 	"mizito/internal/database"
+	"mizito/internal/env"
 	"mizito/internal/websocket/websocket"
 )
 import websocketfiber "github.com/gofiber/contrib/websocket"
 
-func InitSocket(r *Router, redis database.RedisHandler, mongo database.MongoHandler) {
+func InitSocket(r *Router, redis *database.RedisHandler, mongo *database.MongoHandler, env *env.Config) {
 
 	fmt.Println("initializing socket routes...")
 
-	socketManager := websocket.NewChannelHandler(redis, mongo)
+	socketManager := websocket.NewChannelHandler(redis, mongo, env)
 
 	r.App.Get("/ws/:id", websocketfiber.New(socketManager.Register))
 }

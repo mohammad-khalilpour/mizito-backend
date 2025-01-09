@@ -6,6 +6,16 @@ import (
 	"mizito/pkg/models/dtos"
 )
 
+type EventRouter interface {
+	SendEvent(e *dtos.WebSocketMessage)
+}
+
+type WebSocketManager interface {
+	AddSocket(id uint, conn *websocket.Conn)
+	RemoveSocket(id uint) error
+	GetSocketByID(id uint) (*websocket.Conn, error)
+}
+
 type SocketManager interface {
 	WebSocketManager
 	EventRouter
@@ -13,17 +23,20 @@ type SocketManager interface {
 
 type socketManager struct {
 	sockets   map[uint]*websocket.Conn
-	eventChan chan *dtos.EventMessage
+	eventChan chan *dtos.WebSocketMessage
 }
 
 func NewSocketHandler() SocketManager {
 
-	ch := make(chan *dtos.EventMessage)
+	ch := make(chan *dtos.WebSocketMessage)
 
-	return &socketManager{
+	sm := &socketManager{
 		sockets:   make(map[uint]*websocket.Conn),
 		eventChan: ch,
 	}
+	go sm.publish()
+
+	return sm
 }
 
 func (m *socketManager) AddSocket(id uint, conn *websocket.Conn) {
@@ -52,11 +65,11 @@ func (m *socketManager) GetSocketByID(id uint) (*websocket.Conn, error) {
 	return sck, nil
 }
 
-func (m *socketManager) AddToPublishChan(e *dtos.EventMessage) {
+func (m *socketManager) SendEvent(e *dtos.WebSocketMessage) {
 	m.eventChan <- e
 }
 
-func (m *socketManager) Publish() {
+func (m *socketManager) publish() {
 
 	for msg := range m.eventChan {
 		for _, id := range msg.Ids {

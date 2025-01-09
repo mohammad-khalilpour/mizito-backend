@@ -15,7 +15,7 @@ type Event struct {
 	EventType EventType           `validate:"oneof='message notification'" json:"event_type"`
 }
 
-type EventMessage struct {
+type WebSocketMessage struct {
 	Event *Event
 	Ids   []uint
 }
