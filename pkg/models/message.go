@@ -5,8 +5,8 @@ import (
 )
 
 type Message struct {
-	Sender uint
-	Project Project
-	Content []byte
+	Sender    uint
+	Project   Project
+	Content   []byte
 	CreatedAt time.Time
 }

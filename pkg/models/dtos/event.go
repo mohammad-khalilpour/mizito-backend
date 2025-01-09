@@ -1,5 +1,7 @@
 package dtos
 
+import message_dto "mizito/pkg/models/dtos/message"
+
 type EventType string
 
 const (
@@ -8,8 +10,9 @@ const (
 )
 
 type Event struct {
-	Payload   string
-	EventType EventType `validate:"oneof='message notification'"`
+	// for later use, struct must get generic attribute for Payload
+	Payload   message_dto.Message `validate:"dive" json:"payload"`
+	EventType EventType           `validate:"oneof='message notification'" json:"event_type"`
 }
 
 type EventMessage struct {

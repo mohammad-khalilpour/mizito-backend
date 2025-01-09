@@ -2,11 +2,13 @@ package websocket
 
 import (
 	"encoding/json"
+	"fmt"
 	"mizito/internal/database"
 	"mizito/internal/repositories"
 	"mizito/pkg/models/dtos"
 	message_dto "mizito/pkg/models/dtos/message"
 	"strconv"
+	"time"
 )
 
 import "github.com/gofiber/contrib/websocket"
@@ -50,9 +52,6 @@ func (chm ChannelHandler) ProcessEvents() {
 
 func (chm ChannelHandler) processMsg(event *dtos.EventMessage) {
 	var msg message_dto.Message
-	if err := json.Unmarshal([]byte(event.Event.Payload), &msg); err != nil {
-		// log for error or produce to kafka error queue
-	}
 	if members, err := chm.ProjectDetail.GetProjectMembers(msg.Project); err != nil {
 		// log again for errors
 	} else {
@@ -77,8 +76,10 @@ func (chm ChannelHandler) Register(c *websocket.Conn) {
 		)
 		if err = c.ReadJSON(&e); err != nil {
 			//handle related error
+			fmt.Println(err.Error())
 			continue
 		}
+		e.Payload.CreatedAt = time.Now()
 		if eRaw, err = json.Marshal(e.Payload); err != nil {
 			continue
 		}

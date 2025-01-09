@@ -5,8 +5,7 @@ import (
 )
 
 type Message struct {
-	Sender uint
-	Project uint
-	Content []byte
+	Project   uint   `json:"project_id"`
+	Content   string `json:"content"`
 	CreatedAt time.Time
 }

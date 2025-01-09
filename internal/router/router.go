@@ -29,7 +29,7 @@ func InitApp(cfg *env.Config) *Router {
 func (r *Router) Init(env *env.Config) {
 
 	redis := database.NewRedisHandler(env)
-	mongo := database.NewMongoHandler(env)
+	mongo := database.NewMongoHandler(env, redis)
 
 	InitAuth(r)
 	InitProject(r)

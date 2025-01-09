@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 	"mizito/internal/env"
@@ -28,14 +29,15 @@ type mongoHandler struct {
 	messagesLen int
 }
 
-func NewMongoHandler(env *env.Config) MongoHandler {
+func NewMongoHandler(env *env.Config, Redis RedisHandler) MongoHandler {
 	var mongoDB mongoHandler
 	if client, err := mongo.Connect(options.Client().ApplyURI(env.MongoDBHost)); err != nil {
 		panic(fmt.Sprintf("failed to establish connection to mongodb, err: %s", err))
 	} else {
 		mongoDB = mongoHandler{
 			client:      client,
-			messageChan: make(chan bson.M, 100),
+			redis:       Redis,
+			messageChan: make(chan []byte, 100),
 			cfg:         env,
 		}
 	}
@@ -81,12 +83,23 @@ func (mh *mongoHandler) ProcessMessages() {
 	coll := db.Collection(mh.cfg.MongoCollection)
 
 	for message := range mh.messageChan {
-		fmt.Println("hello there")
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
-		res, errs := coll.InsertOne(ctx, message)
-		if errs != nil {
+
+		var doc bson.D
+
+		fmt.Println(string(message))
+
+		if err := json.Unmarshal(message, &doc); err != nil {
+			// error and log
+			continue
+		}
+
+		fmt.Println(doc)
+
+		res, err := coll.InsertOne(ctx, doc)
+		if err != nil {
 			//handle errors here
-			fmt.Println("error occurred while inserting item into db", errs)
+			fmt.Println("error occurred while inserting item into db", err)
 			continue
 		}
 
