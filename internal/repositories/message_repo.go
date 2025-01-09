@@ -113,11 +113,8 @@ func (rm *messageRepository) SubscribeMessages() {
 	subscriber := rm.redis.Client.Subscribe(context.Background(), "messages")
 
 	for {
-		fmt.Println("subscribing to messages")
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
-		fmt.Println("dsafsafs")
 		event, err := subscriber.ReceiveMessage(ctx)
-		fmt.Println("dsafas", event.Payload)
 		if err != nil {
 			// log error
 			continue
