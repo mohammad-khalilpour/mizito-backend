@@ -8,7 +8,7 @@ const (
 )
 
 type Event struct {
-	Payload   []byte
+	Payload   string
 	EventType EventType `validate:"oneof='message notification'"`
 }
 

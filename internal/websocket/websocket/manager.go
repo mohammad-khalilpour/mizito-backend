@@ -3,7 +3,9 @@ package websocket
 import (
 	"encoding/json"
 	"mizito/internal/database"
+	"mizito/internal/repositories"
 	"mizito/pkg/models/dtos"
+	message_dto "mizito/pkg/models/dtos/message"
 	"strconv"
 )
 
@@ -13,16 +15,23 @@ type ChannelHandler struct {
 	socketManager SocketManager
 	RedisClient   database.RedisHandler
 	MongoClient   database.MongoHandler
+	ProjectDetail repositories.ProjectDetail
 }
 
-func NewChannelHandler() *ChannelHandler {
+func NewChannelHandler(redisClient database.RedisHandler, mongoClient database.MongoHandler) *ChannelHandler {
 
 	sm := NewSocketHandler()
 	go sm.Publish()
 
-	return &ChannelHandler{
+	chHandler := &ChannelHandler{
 		socketManager: sm,
+		RedisClient:   redisClient,
+		MongoClient:   mongoClient,
 	}
+
+	go chHandler.ProcessEvents()
+
+	return chHandler
 }
 
 func (chm ChannelHandler) ProcessEvents() {
@@ -31,7 +40,25 @@ func (chm ChannelHandler) ProcessEvents() {
 		if err := json.Unmarshal(e, &event); err != nil {
 			continue
 		}
+		if event.Event.EventType == dtos.Message {
+			chm.processMsg(&event)
+		}
+
 		chm.socketManager.AddToPublishChan(&event)
+	}
+}
+
+func (chm ChannelHandler) processMsg(event *dtos.EventMessage) {
+	var msg message_dto.Message
+	if err := json.Unmarshal([]byte(event.Event.Payload), &msg); err != nil {
+		// log for error or produce to kafka error queue
+	}
+	if members, err := chm.ProjectDetail.GetProjectMembers(msg.Project); err != nil {
+		// log again for errors
+	} else {
+		for _, member := range members {
+			event.Ids = append(event.Ids, member.User.ID)
+		}
 	}
 }
 
@@ -44,20 +71,20 @@ func (chm ChannelHandler) Register(c *websocket.Conn) {
 
 	for {
 		var (
-			e    dtos.EventMessage
+			e    dtos.Event
 			eRaw []byte
 			err  error
 		)
-		if _, eRaw, err = c.ReadMessage(); err != nil {
+		if err = c.ReadJSON(&e); err != nil {
 			//handle related error
 			continue
 		}
-		if err := json.Unmarshal(eRaw, &e); err != nil {
+		if eRaw, err = json.Marshal(e.Payload); err != nil {
 			continue
 		}
-		chm.RedisClient.AddToPublishChan(eRaw)
-		if e.Event.EventType == dtos.Message {
-			chm.MongoClient.StoreMessage(eRaw)
+		if e.EventType == dtos.Message {
+			go chm.MongoClient.StoreMessage(eRaw)
+
 		}
 
 	}

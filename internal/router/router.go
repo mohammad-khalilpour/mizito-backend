@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"mizito/internal/database"
 	"mizito/internal/env"
 	"mizito/internal/middleware"
 )
@@ -25,13 +26,17 @@ func InitApp(cfg *env.Config) *Router {
 	}
 }
 
-func (r *Router) Init() {
+func (r *Router) Init(env *env.Config) {
+
+	redis := database.NewRedisHandler(env)
+	mongo := database.NewMongoHandler(env)
+
 	InitAuth(r)
 	InitProject(r)
 	InitSubtask(r)
 	InitTask(r)
 	InitUser(r)
-	InitSocket(r)
+	InitSocket(r, redis, mongo)
 }
 
 func (r *Router) Run() {
