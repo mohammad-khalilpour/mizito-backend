@@ -17,7 +17,7 @@ import "github.com/gofiber/contrib/websocket"
 type ChannelRepository struct {
 	socketManager SocketManager
 	messageRepo   repositories.MessageChannelRepository
-	ProjectDetail repositories.ProjectDetail
+	ProjectDetail repositories.ProjectDetailRepo
 }
 
 func NewChannelHandler(redis *database.RedisHandler, mongo *database.MongoHandler, postgreSql *database.DatabaseHandler, env *env.Config) *ChannelRepository {
