@@ -30,13 +30,14 @@ func (r *Router) Init(env *env.Config) {
 
 	redis := database.NewRedisHandler(env)
 	mongo := database.NewMongoHandler(env)
+	postgreSql := database.NewDatabaseHandler(env)
 
 	InitAuth(r)
-	InitProject(r)
+	InitProject(r, postgreSql)
 	InitSubtask(r)
 	InitTask(r)
 	InitUser(r)
-	InitSocket(r, redis, mongo, env)
+	InitSocket(r, redis, mongo, postgreSql, env)
 }
 
 func (r *Router) Run() {

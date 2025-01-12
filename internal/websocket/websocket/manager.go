@@ -20,14 +20,14 @@ type ChannelRepository struct {
 	ProjectDetail repositories.ProjectDetail
 }
 
-func NewChannelHandler(redis *database.RedisHandler, mongo *database.MongoHandler, env *env.Config) *ChannelRepository {
+func NewChannelHandler(redis *database.RedisHandler, mongo *database.MongoHandler, postgreSql *database.DatabaseHandler, env *env.Config) *ChannelRepository {
 
 	sm := NewSocketHandler()
 
 	chHandler := &ChannelRepository{
 		socketManager: sm,
 		messageRepo:   repositories.NewMessageRepository(redis, mongo, env),
-		ProjectDetail: repositories.NewProjectRepository(),
+		ProjectDetail: repositories.NewProjectRepository(postgreSql),
 	}
 
 	go chHandler.ProcessEvents()
@@ -54,7 +54,7 @@ func (chm ChannelRepository) processMsg(event *dtos.WebSocketMessage) {
 		// log again for errors
 	} else {
 		for _, member := range members {
-			event.Ids = append(event.Ids, member.User.ID)
+			event.Ids = append(event.Ids, member.UserID)
 		}
 	}
 }

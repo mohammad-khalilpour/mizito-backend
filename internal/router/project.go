@@ -1,11 +1,13 @@
 package router
 
 import (
+	"mizito/internal/database"
 	"mizito/internal/handlers"
 )
 
-func InitProject(r *Router) {
-	pHandler := handlers.NewProjectRepository()
+func InitProject(r *Router, postgreSql *database.DatabaseHandler) {
+
+	pHandler := handlers.NewProjectHandler(postgreSql)
 
 	projectsApp := r.App.Group("/projects")
 	projectsApp.Get("/all", pHandler.GetProjectsByUser)
@@ -13,6 +15,7 @@ func InitProject(r *Router) {
 	projectsApp.Put("/:project_id", pHandler.UpdateProject)
 	projectsApp.Delete("/:project_id", pHandler.DeleteProject)
 
-	projectApp := r.App.Group("project")
-	projectApp.Post("/project", pHandler.CreateProject)
+	projectApp := r.App.Group("/project")
+	projectApp.Post("", pHandler.CreateProject)
+
 }
