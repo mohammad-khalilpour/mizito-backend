@@ -6,6 +6,7 @@ import (
 
 type Message struct {
 	Sender    uint
+	ProjectID uint
 	Project   Project
 	Content   []byte
 	CreatedAt time.Time

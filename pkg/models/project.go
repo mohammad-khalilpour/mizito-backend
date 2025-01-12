@@ -1,14 +1,17 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
-
-
-type Project struct{
-	ID string `gorm:""`
-	Team Team `validate:"dive"`
-	Name string `validate:"required;min=5"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	ImageUrl string
+type Project struct {
+	ID            uint `gorm:"primaryKey;autoIncrement"`
+	TeamID        uint
+	ProjectMember []User    `gorm:"foreignKey:ProjectID"`
+	ProjectTasks  []Task    ``
+	Name          string    `validate:"required;min=5"`
+	Messages      []Message `gorm:"foreignKey:ProjectID"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	ImageUrl      string
 }
