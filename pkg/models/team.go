@@ -8,7 +8,8 @@ const (
 )
 
 type Team struct {
-	ID       uint         `gorm:"primaryKey"`
+	ID       uint `gorm:"primaryKey"`
+	Name     string
 	Projects []Project    `gorm:"foreignKey:TeamID"`
 	Members  []TeamMember `gorm:"foreignKey:TeamID;constraint:OnDelete:CASCADE;"`
 }
