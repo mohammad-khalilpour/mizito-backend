@@ -7,8 +7,8 @@ import (
 	bearerhandler "mizito/internal/repositories/auth/bearer"
 )
 
-func InitAuth(r *Router, secret string, db *database.DatabaseHandler) {
-	jwtRepo := bearerhandler.NewJwtRepository(secret)
+func InitAuth(r *Router, secret string, redis *database.RedisHandler, db *database.DatabaseHandler) {
+	jwtRepo := bearerhandler.NewJwtRepository(secret, redis)
 	basicRepo := basichandler.NewBasicHandler(db)
 
 	authHandler := handlers.NewAuthHandler(jwtRepo, basicRepo)

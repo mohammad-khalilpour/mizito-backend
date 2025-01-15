@@ -10,15 +10,12 @@ type SubtaskRepository interface {
 	DeleteSubtask(subtask *models.Subtask) (uint, error)
 }
 
-
 type subtaskRepository struct {
-
 }
 
-func NewSubtaskRepository() SubtaskRepository{
+func NewSubtaskRepository() SubtaskRepository {
 	return &subtaskRepository{}
 }
-
 
 func (sr *subtaskRepository) GetSubtasksByTask(taskID uint) ([]models.Subtask, error) {
 	return nil, nil
@@ -35,4 +32,3 @@ func (sr *subtaskRepository) UpdateSubtask(subtask *models.Subtask) (uint, error
 func (sr *subtaskRepository) DeleteSubtask(subtask *models.Subtask) (uint, error) {
 	return 0, nil
 }
-
