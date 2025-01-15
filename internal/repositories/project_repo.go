@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"mizito/internal/database"
+	"mizito/internal/repositories/utils"
 	"mizito/pkg/models"
 )
 
 type ProjectCrudRepo interface {
 	CreateProject(project *models.Project) (uint, error)
-	UpdateProject(projectID uint, project *models.Project) (uint, error)
-	DeleteProject(projectID uint) (uint, error)
-	GetProjectByID(projectID uint) (*models.Project, error)
+	UpdateProject(projectID uint, project *models.Project, requestUserID uint) (uint, error)
+	DeleteProject(projectID uint, requestUserID uint) (uint, error)
+	GetProjectByID(projectID uint, requestUserID uint) (*models.Project, error)
 }
 
 type ProjectDetailRepo interface {
@@ -22,10 +23,10 @@ type ProjectDetailRepo interface {
 	// associated with ProjectID which is derived from event
 	// the method can leverage redis handler and main db
 	// one pattern might be cache aside pattern
-	GetProjectMembers(userID uint) ([]models.TeamMember, error)
-	AddUserToProject(ProjectID uint, userID uint) error
-	GetUsersByProjectID(ProjectID uint) ([]uint, error)
-	AssignTask(UserID uint, TaskTitle uint) error
+	GetProjectMembers(ProjectID uint) ([]models.TeamMember, error)
+	AddUserToProject(ProjectID uint, userID uint, requestUserID uint) error
+	GetUsersByProjectID(ProjectID uint, requestUserID uint) ([]uint, error)
+	AssignTask(UserID uint, TaskTitle uint, requestUserID uint) error
 }
 
 type ProjectRepository interface {
@@ -34,11 +35,13 @@ type ProjectRepository interface {
 }
 
 type projectRepository struct {
-	DB *gorm.DB
+	permissionRepo utils.PermissionRepository
+	DB             *gorm.DB
 }
 
 func NewProjectRepository(postgreSql *database.DatabaseHandler) ProjectRepository {
-	return &projectRepository{DB: postgreSql.DB}
+	permissionRepo := utils.NewPermissionRepository(postgreSql)
+	return &projectRepository{DB: postgreSql.DB, permissionRepo: permissionRepo}
 }
 
 func (ph *projectRepository) GetProjectsByUser(userID uint) ([]models.Project, error) {
@@ -73,7 +76,11 @@ func (ph *projectRepository) CreateProject(project *models.Project) (uint, error
 	return project.ID, nil
 }
 
-func (ph *projectRepository) GetProjectByID(projectID uint) (*models.Project, error) {
+func (ph *projectRepository) GetProjectByID(projectID uint, requestUserID uint) (*models.Project, error) {
+	if !ph.permissionRepo.CheckUserHasAccessToProject(projectID, requestUserID) {
+		return nil, errors.New("you don't have access to the project")
+	}
+
 	var project models.Project
 	if err := ph.DB.First(&project, projectID).Error; err != nil {
 		return nil, err
@@ -81,7 +88,11 @@ func (ph *projectRepository) GetProjectByID(projectID uint) (*models.Project, er
 	return &project, nil
 }
 
-func (ph *projectRepository) UpdateProject(projectID uint, project *models.Project) (uint, error) {
+func (ph *projectRepository) UpdateProject(projectID uint, project *models.Project, requestUserID uint) (uint, error) {
+	if !ph.permissionRepo.CheckUserIsAdminOfProject(projectID, requestUserID) {
+		return 0, errors.New("only admins can update the project")
+	}
+
 	var existingProject models.Project
 	if err := ph.DB.First(&existingProject, projectID).Error; err != nil {
 		return 0, err
@@ -93,14 +104,22 @@ func (ph *projectRepository) UpdateProject(projectID uint, project *models.Proje
 	return existingProject.ID, nil
 }
 
-func (ph *projectRepository) DeleteProject(projectID uint) (uint, error) {
+func (ph *projectRepository) DeleteProject(projectID uint, requestUserID uint) (uint, error) {
+	if !ph.permissionRepo.CheckUserIsAdminOfProject(projectID, requestUserID) {
+		return 0, errors.New("only admins can update the project")
+	}
+
 	if err := ph.DB.Delete(&models.Project{}, projectID).Error; err != nil {
 		return 0, err
 	}
 	return projectID, nil
 }
 
-func (ph *projectRepository) GetUsersByProjectID(projectID uint) ([]uint, error) {
+func (ph *projectRepository) GetUsersByProjectID(projectID uint, requestUserID uint) ([]uint, error) {
+	if !ph.permissionRepo.CheckUserHasAccessToProject(projectID, requestUserID) {
+		return nil, errors.New("you don't have access to the project")
+	}
+
 	var userIDs []uint
 	if err := ph.DB.Model(&models.TeamMember{}).Where("project_id = ?", projectID).Pluck("user_id", &userIDs).Error; err != nil {
 		return nil, err
@@ -116,7 +135,10 @@ func (ph *projectRepository) GetProjectMembers(userID uint) ([]models.TeamMember
 	return teamMembers, nil
 }
 
-func (ph *projectRepository) AddUserToProject(projectID uint, userID uint) error {
+func (ph *projectRepository) AddUserToProject(projectID uint, userID uint, requestUserID uint) error {
+	if !ph.permissionRepo.CheckUserIsAdminOfProject(projectID, requestUserID) {
+		return errors.New("only admins can update the project")
+	}
 	var project models.Project
 	if err := ph.DB.First(&project, projectID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -140,7 +162,11 @@ func (ph *projectRepository) AddUserToProject(projectID uint, userID uint) error
 	return nil
 }
 
-func (ph *projectRepository) AssignTask(userID uint, taskID uint) error {
+func (ph *projectRepository) AssignTask(userID uint, taskID uint, requestUserID uint) error {
+	if !ph.permissionRepo.CheckUserIsAdminOfTask(taskID, requestUserID) {
+		return errors.New("only admins can update the project")
+	}
+
 	var task models.Task
 	if err := ph.DB.Preload("Project").First(&task, taskID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
