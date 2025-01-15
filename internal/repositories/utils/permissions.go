@@ -3,6 +3,7 @@ package utils
 import (
 	"mizito/internal/database"
 	"mizito/pkg/models"
+	"sync"
 )
 
 type TeamPermissionHandler interface {
@@ -20,22 +21,29 @@ type ProjectPermissionHandler interface {
 	CheckUserIsAdminOfProject(projectId uint, userId uint) bool
 }
 
-type PermissionHandler interface {
+type PermissionRepository interface {
 	TeamPermissionHandler
 	TaskPermissionHandler
 	ProjectPermissionHandler
 }
 
-type permissionHandler struct {
+type permissionRepository struct {
 	db *database.DatabaseHandler
 }
 
-func NewPermissionHandler() PermissionHandler {
-	return &permissionHandler{}
+var (
+	permissionRepoInstance PermissionRepository
+	permissionRepoOnce     sync.Once
+)
 
+func NewPermissionRepository(postgres *database.DatabaseHandler) PermissionRepository {
+	permissionRepoOnce.Do(func() {
+		permissionRepoInstance = &permissionRepository{db: postgres}
+	})
+	return permissionRepoInstance
 }
 
-func (ph *permissionHandler) CheckUserHasAccessToTeam(userId uint, teamId uint) bool {
+func (ph *permissionRepository) CheckUserHasAccessToTeam(userId uint, teamId uint) bool {
 	var count int64
 	err := ph.db.DB.Model(&models.TeamMember{}).
 		Where("user_id = ? AND team_id = ?", userId, teamId).
@@ -47,7 +55,7 @@ func (ph *permissionHandler) CheckUserHasAccessToTeam(userId uint, teamId uint) 
 	return count > 0
 }
 
-func (ph *permissionHandler) CheckUserIsAdminOfTeam(userId uint, teamId uint) bool {
+func (ph *permissionRepository) CheckUserIsAdminOfTeam(userId uint, teamId uint) bool {
 	var count int64
 	err := ph.db.DB.Model(&models.TeamMember{}).
 		Where("user_id = ? AND team_id = ? AND role = ?", userId, teamId, models.Admin).
@@ -59,14 +67,13 @@ func (ph *permissionHandler) CheckUserIsAdminOfTeam(userId uint, teamId uint) bo
 	return count > 0
 }
 
-func (ph *permissionHandler) CheckUserHasAccessToTask(taskId uint, userId uint) bool {
+func (ph *permissionRepository) CheckUserHasAccessToTask(taskId uint, userId uint) bool {
 	var task models.Task
 	err := ph.db.DB.First(&task, taskId).Error
 	if err != nil {
 		// Task not found or other error
 		return false
 	}
-
 
 	// Otherwise, check if the user is a member of the task
 	var count int64
@@ -83,7 +90,7 @@ func (ph *permissionHandler) CheckUserHasAccessToTask(taskId uint, userId uint) 
 	return count > 0
 }
 
-func (ph *permissionHandler) CheckUserIsAdminOfTask(taskId uint, userId uint) bool {
+func (ph *permissionRepository) CheckUserIsAdminOfTask(taskId uint, userId uint) bool {
 	var task models.Task
 	err := ph.db.DB.First(&task, taskId).Error
 	if err != nil {
@@ -104,7 +111,7 @@ func (ph *permissionHandler) CheckUserIsAdminOfTask(taskId uint, userId uint) bo
 	return false
 }
 
-func (ph *permissionHandler) CheckUserHasAccessToProject(projectId uint, userId uint) bool {
+func (ph *permissionRepository) CheckUserHasAccessToProject(projectId uint, userId uint) bool {
 	var project models.Project
 	err := ph.db.DB.First(&project, projectId).Error
 	if err != nil {
@@ -123,7 +130,7 @@ func (ph *permissionHandler) CheckUserHasAccessToProject(projectId uint, userId 
 	return count > 0
 }
 
-func (ph *permissionHandler) CheckUserIsAdminOfProject(projectId uint, userId uint) bool {
+func (ph *permissionRepository) CheckUserIsAdminOfProject(projectId uint, userId uint) bool {
 	var project models.Project
 	err := ph.db.DB.First(&project, projectId).Error
 	if err != nil {

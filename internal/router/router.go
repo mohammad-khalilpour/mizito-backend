@@ -19,6 +19,7 @@ func InitApp(cfg *env.Config) *Router {
 	app.Use(recover.New())
 
 	app.Use("/ws/:id", middleware.UpgradeMiddleware)
+	app.Use(middleware.AuthMiddleware)
 
 	return &Router{
 		App: app,
@@ -32,7 +33,7 @@ func (r *Router) Init(env *env.Config) {
 	mongo := database.NewMongoHandler(env)
 	postgreSql := database.NewDatabaseHandler(env)
 
-	InitAuth(r)
+	InitAuth(r, env.AuthorizationSecret, redis, postgreSql)
 	InitProject(r, postgreSql)
 	InitSubtask(r)
 	InitTask(r)
