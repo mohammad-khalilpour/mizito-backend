@@ -58,6 +58,7 @@ func (pr *projectHandler) GetProjectsByUser(ctx *fiber.Ctx) error {
 
 func (pr *projectHandler) GetUsersByProjectID(ctx *fiber.Ctx) error {
 	projectID := ctx.Params("project_id")
+	requestUserID := ctx.Locals("userID").(uint)
 	if projectID == "" {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "projectID is required",
@@ -71,7 +72,7 @@ func (pr *projectHandler) GetUsersByProjectID(ctx *fiber.Ctx) error {
 		})
 	}
 
-	users, repoErr := pr.repository.GetUsersByProjectID(uint(parsedProjectID))
+	users, repoErr := pr.repository.GetUsersByProjectID(uint(parsedProjectID), requestUserID)
 	if repoErr != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": repoErr.Error(),
@@ -103,6 +104,7 @@ func (pr *projectHandler) CreateProject(ctx *fiber.Ctx) error {
 
 func (pr *projectHandler) GetProjectByID(ctx *fiber.Ctx) error {
 	projectID := ctx.Params("project_id")
+	requestUserID := ctx.Locals("userID").(uint)
 	if projectID == "" {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "projectID is required",
@@ -116,7 +118,7 @@ func (pr *projectHandler) GetProjectByID(ctx *fiber.Ctx) error {
 		})
 	}
 
-	project, repoErr := pr.repository.GetProjectByID(uint(parsedProjectID))
+	project, repoErr := pr.repository.GetProjectByID(uint(parsedProjectID), requestUserID)
 	if repoErr != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": repoErr.Error(),
@@ -128,6 +130,7 @@ func (pr *projectHandler) GetProjectByID(ctx *fiber.Ctx) error {
 
 func (pr *projectHandler) UpdateProject(ctx *fiber.Ctx) error {
 	projectID := ctx.Params("projectID")
+	requestUserID := ctx.Locals("userID").(uint)
 	if projectID == "" {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "projectID is required",
@@ -148,7 +151,7 @@ func (pr *projectHandler) UpdateProject(ctx *fiber.Ctx) error {
 		})
 	}
 
-	_, repoErr := pr.repository.UpdateProject(uint(parsedProjectID), updatedProject)
+	_, repoErr := pr.repository.UpdateProject(uint(parsedProjectID), updatedProject, requestUserID)
 	if repoErr != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": repoErr.Error(),
@@ -162,6 +165,8 @@ func (pr *projectHandler) UpdateProject(ctx *fiber.Ctx) error {
 
 func (pr *projectHandler) DeleteProject(ctx *fiber.Ctx) error {
 	projectID := ctx.Params("projectID")
+	requestUserID := ctx.Locals("userID").(uint)
+
 	if projectID == "" {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "projectID is required",
@@ -175,7 +180,7 @@ func (pr *projectHandler) DeleteProject(ctx *fiber.Ctx) error {
 		})
 	}
 
-	_, repoErr := pr.repository.DeleteProject(uint(parsedProjectID))
+	_, repoErr := pr.repository.DeleteProject(uint(parsedProjectID), requestUserID)
 	if repoErr != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": repoErr.Error(),
@@ -191,6 +196,7 @@ func (pr *projectHandler) AddUserToProject(ctx *fiber.Ctx) error {
 	type RequestBody struct {
 		UserID uint `json:"userID"`
 	}
+	requestUserID := ctx.Locals("userID").(uint)
 
 	projectID, err := ctx.ParamsInt("project_id")
 	if err != nil || projectID <= 0 {
@@ -213,7 +219,7 @@ func (pr *projectHandler) AddUserToProject(ctx *fiber.Ctx) error {
 		})
 	}
 
-	repoErr := pr.repository.AddUserToProject(uint(projectID), userID)
+	repoErr := pr.repository.AddUserToProject(uint(projectID), userID, requestUserID)
 	if repoErr != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": repoErr.Error(),
@@ -230,6 +236,7 @@ func (pr *projectHandler) AssignTask(ctx *fiber.Ctx) error {
 		UserID uint `json:"userID" validate:"required"`
 		TaskID uint `json:"taskID" validate:"required"`
 	}
+	requestUserID := ctx.Locals("userID").(uint)
 
 	var requestBody RequestBody
 	if err := ctx.BodyParser(&requestBody); err != nil {
@@ -244,7 +251,7 @@ func (pr *projectHandler) AssignTask(ctx *fiber.Ctx) error {
 		})
 	}
 	var err error
-	err = pr.repository.AssignTask(requestBody.UserID, requestBody.TaskID)
+	err = pr.repository.AssignTask(requestBody.UserID, requestBody.TaskID, requestUserID)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
