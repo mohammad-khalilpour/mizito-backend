@@ -39,6 +39,7 @@ func (r *Router) Init(env *env.Config) {
 	InitTask(r, postgreSql)
 	InitUser(r, postgreSql)
 	InitDashboard(r, postgreSql)
+	InitTeam(r, postgreSql)
 	InitSocket(r, redis, mongo, postgreSql, env)
 }
 

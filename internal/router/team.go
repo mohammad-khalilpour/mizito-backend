@@ -1,13 +1,12 @@
 package router
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"mizito/internal/database"
 	"mizito/internal/handlers"
 )
 
-func RegisterRoutes(app *fiber.App, db *database.DatabaseHandler) {
-	routes := app.Group("/teams")
+func InitTeam(r *Router, db *database.DatabaseHandler) {
+	routes := r.App.Group("/teams")
 
 	th := handlers.NewTeamHandler(db)
 
