@@ -18,5 +18,5 @@ func RegisterRoutes(app *fiber.App, db *database.DatabaseHandler) {
 	routes.Delete("/remove-users", th.DeleteUsersFromTeam)
 	routes.Post("/create", th.CreateTeam)
 	routes.Put("/update", th.UpdateTeam)
-	routes.Delete("/delete-task", th.DeleteTask)
+	//routes.Delete("/delete-task", th.DeleteTask)
 }

@@ -10,10 +10,10 @@ type Config struct {
 	RedisUsername       string
 	RedisPassword       string
 	RedisProjectsDB     string
-	PostgresHost        string
-	PostgresPort        string
-	PostgresUser        string
-	PostgresPass        string
-	PostgresDatabase    string
+	PostgresHost        string `envDefault:"localhost"`
+	PostgresPort        string `envDefault:"5432"`
+	PostgresUser        string `envDefault:"postgres"`
+	PostgresPass        string `envDefault:"postgres"`
+	PostgresDatabase    string `envDefault:"postgres"`
 	MongoDBHost         string `envDefault:"mongodb://localhost:27017"`
 }

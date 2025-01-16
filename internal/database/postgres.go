@@ -61,11 +61,11 @@ func NewDatabaseHandler(cfg *env.Config) *DatabaseHandler {
 // Migrate runs database migrations for all models.
 func (d *DatabaseHandler) Migrate() error {
 	if err := d.DB.AutoMigrate(
+		&models.Team{},
 		&models.Project{},
 		&models.Task{},
 		&models.Subtask{},
 		&models.User{},
-		&models.Team{},
 		&models.TeamMember{},
 		&models.Message{},
 		&models.Report{},

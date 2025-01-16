@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"mizito/internal/database"
 	"mizito/internal/repositories"
 	"mizito/pkg/models"
 	"strconv"
@@ -24,7 +25,8 @@ type teamHandler struct {
 	repo repositories.TeamRepository
 }
 
-func NewTeamHandler(repo repositories.TeamRepository) TeamHandler {
+func NewTeamHandler(postgreSql *database.DatabaseHandler) TeamHandler {
+	repo := repositories.NewTeamRepository(postgreSql)
 	return &teamHandler{
 		repo: repo,
 	}
