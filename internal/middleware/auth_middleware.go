@@ -5,9 +5,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"mizito/internal/env"
+	"strings"
 )
 
 func AuthMiddleware(c *fiber.Ctx) error {
+	if strings.HasPrefix(c.Path(), "/api/auth") || strings.HasPrefix(c.Path(), "/user") {
+		return c.Next()
+	}
+
 	token := c.Get("Authorization")
 	if len(token) > 7 && token[:7] == "Bearer " {
 		token = token[7:]

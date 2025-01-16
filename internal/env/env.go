@@ -3,7 +3,7 @@ package env
 type Config struct {
 	MongoCollection     string `envDefault:"messages"`
 	MongoDatabase       string `envDefault:"mizito"`
-	AppPort             string `envDefault:":8080"`
+	AppPort             string `envDefault:":8000"`
 	AuthorizationSecret string `evnDefault:"testing12345678910"`
 	RedisHost           string `envDefault:"localhost"`
 	RedisPort           string `envDefault:"6379"`

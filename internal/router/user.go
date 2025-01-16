@@ -14,6 +14,6 @@ func InitUser(r *Router, postgreSql *database.DatabaseHandler) {
 	TaskApp.Put("/:user_id", uHandler.UpdateUser)
 	TaskApp.Delete("/:user_id", uHandler.DeleteUser)
 
-	subtaskApp := r.App.Group("user")
-	subtaskApp.Post("/:user_id", uHandler.CreateUser)
+	subtaskApp := r.App.Group("/user")
+	subtaskApp.Post("/", uHandler.CreateUser)
 }

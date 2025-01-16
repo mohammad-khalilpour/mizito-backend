@@ -18,7 +18,7 @@ type Task struct {
 type Report struct {
 	ID        uint `gorm:"primaryKey"`
 	TaskID    uint
-	Member    User `gorm:"foreignKey:ID"`
+	UserID    uint `gorm:"not null"`
 	Message   string
 	CreatedAt time.Time
 }
