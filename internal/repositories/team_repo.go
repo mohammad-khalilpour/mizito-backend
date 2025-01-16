@@ -16,7 +16,7 @@ type TeamRepository interface {
 	GetProjectsByTeam(teamID uint) ([]*models.Project, error)
 	AddUsersToTeam(userIDs []uint, teamID uint, role models.Role) (uint, error)
 	DeleteUsersFromTeam(userIDs []uint, teamID uint) (uint, error)
-	CreateTeam(team *models.Team) (uint, error)
+	CreateTeam(team *models.Team, requestUserID uint) (uint, error)
 	UpdateTeam(team *models.Team) (uint, error)
 	DeleteTeam(teamID uint) (uint, error)
 	DeleteTasks(teamID uint) (uint, error)
@@ -185,7 +185,7 @@ func (tr *teamRepository) DeleteUsersFromTeam(userIDs []uint, teamID uint) (uint
 	return uint(deletedCount), nil
 }
 
-func (tr *teamRepository) CreateTeam(team *models.Team) (uint, error) {
+func (tr *teamRepository) CreateTeam(team *models.Team, requestUserID uint) (uint, error) {
 	if team == nil {
 		return 0, errors.New("team cannot be nil")
 	}
@@ -195,48 +195,16 @@ func (tr *teamRepository) CreateTeam(team *models.Team) (uint, error) {
 		return 0, fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
 
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
 	if err := tx.Create(team).Error; err != nil {
 		tx.Rollback()
 		return 0, fmt.Errorf("failed to create team: %w", err)
 	}
 
-	if len(team.Members) > 0 {
-		for _, member := range team.Members {
-			member.TeamID = team.ID
-			var user models.User
-			if err := tx.First(&user, member.UserID).Error; err != nil {
-				tx.Rollback()
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					return 0, fmt.Errorf("user %d not found", member.UserID)
-				}
-				return 0, fmt.Errorf("failed to retrieve user %d: %w", member.UserID, err)
-			}
+	var teamMember = models.TeamMember{TeamID: team.ID, UserID: requestUserID, Role: models.Admin}
 
-			var existingMember models.TeamMember
-			err := tx.Where("user_id = ? AND team_id = ?", member.UserID, team.ID).First(&existingMember).Error
-			if err == nil {
-				existingMember.Role = member.Role
-				if err := tx.Save(&existingMember).Error; err != nil {
-					tx.Rollback()
-					return 0, fmt.Errorf("failed to update role for user %d in team %d: %w", member.UserID, team.ID, err)
-				}
-				continue
-			} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-				tx.Rollback()
-				return 0, fmt.Errorf("failed to check existing membership for user %d: %w", member.UserID, err)
-			}
-
-			if err := tx.Create(&member).Error; err != nil {
-				tx.Rollback()
-				return 0, fmt.Errorf("failed to add user %d to team %d: %w", member.UserID, team.ID, err)
-			}
-		}
+	if err := tx.Create(teamMember).Error; err != nil {
+		tx.Rollback()
+		return 0, fmt.Errorf("failed to create team: %w", err)
 	}
 
 	if err := tx.Commit().Error; err != nil {

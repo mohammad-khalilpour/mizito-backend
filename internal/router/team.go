@@ -17,5 +17,4 @@ func InitTeam(r *Router, db *database.DatabaseHandler) {
 	routes.Delete("/remove-users", th.DeleteUsersFromTeam)
 	routes.Post("/create", th.CreateTeam)
 	routes.Put("/update", th.UpdateTeam)
-	//routes.Delete("/delete-task", th.DeleteTask)
 }

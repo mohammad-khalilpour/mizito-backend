@@ -50,6 +50,7 @@ func (h *teamHandler) GetTeams(ctx *fiber.Ctx) error {
 // CreateTeam creates a new team
 func (h *teamHandler) CreateTeam(ctx *fiber.Ctx) error {
 	var team models.Team
+	requestUserID := ctx.Locals("userID").(uint)
 
 	// Parse request body
 	if err := ctx.BodyParser(&team); err != nil {
@@ -68,7 +69,7 @@ func (h *teamHandler) CreateTeam(ctx *fiber.Ctx) error {
 	// Optionally, handle initial members
 	// Example: team.Members = [...] (already handled in repository)
 
-	teamID, err := h.repo.CreateTeam(&team)
+	teamID, err := h.repo.CreateTeam(&team, requestUserID)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create team",
