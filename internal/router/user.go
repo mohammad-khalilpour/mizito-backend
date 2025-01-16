@@ -1,11 +1,12 @@
 package router
 
 import (
+	"mizito/internal/database"
 	"mizito/internal/handlers"
 )
 
-func InitUser(r *Router) {
-	uHandler := handlers.NewUserRepository()
+func InitUser(r *Router, postgreSql *database.DatabaseHandler) {
+	uHandler := handlers.NewUserHandler(postgreSql)
 
 	TaskApp := r.App.Group("/users")
 	TaskApp.Get("/all", uHandler.GetUsers)

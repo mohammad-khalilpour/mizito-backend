@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"mizito/internal/database"
 	"strconv"
 
 	"mizito/internal/repositories"
@@ -21,7 +22,8 @@ type userHandler struct {
 	repo repositories.UserRepository
 }
 
-func NewUserHandler(repo repositories.UserRepository) UserHandler {
+func NewUserHandler(postgreSql *database.DatabaseHandler) UserHandler {
+	repo := repositories.NewUserRepository(postgreSql)
 	return &userHandler{
 		repo: repo,
 	}
