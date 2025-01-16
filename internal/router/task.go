@@ -1,11 +1,12 @@
 package router
 
 import (
+	"mizito/internal/database"
 	"mizito/internal/handlers"
 )
 
-func InitTask(r *Router) {
-	tHandler := handlers.NewTaskRepository()
+func InitTask(r *Router, postgreSql *database.DatabaseHandler) {
+	tHandler := handlers.NewTaskHandler(postgreSql)
 
 	TaskApp := r.App.Group("/tasks")
 	TaskApp.Get("/all", tHandler.GetTasksByProject)

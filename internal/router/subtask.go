@@ -1,11 +1,12 @@
 package router
 
 import (
+	"mizito/internal/database"
 	"mizito/internal/handlers"
 )
 
-func InitSubtask(r *Router) {
-	sHandler := handlers.NewSubtaskRepository()
+func InitSubtask(r *Router, postgreSql *database.DatabaseHandler) {
+	sHandler := handlers.NewSubtaskHandler(postgreSql)
 
 	SubtasksApp := r.App.Group("/subtasks")
 	SubtasksApp.Get("/all", sHandler.GetSubtasksByTask)

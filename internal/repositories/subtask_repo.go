@@ -13,7 +13,7 @@ type SubtaskRepository interface {
 	CreateSubtask(subtask *models.Subtask, requestUserID uint) (uint, error)
 	GetSubtaskByID(subtaskID uint, requestUserID uint) (*models.Subtask, error)
 	UpdateSubtask(subtask *models.Subtask, requestUserID uint) (uint, error)
-	DeleteSubtask(subtask *models.Subtask, requestUserID uint) (uint, error)
+	DeleteSubtask(subtaskID uint, requestUserID uint) (uint, error)
 }
 
 type subtaskRepository struct {
@@ -85,7 +85,16 @@ func (sr *subtaskRepository) UpdateSubtask(subtask *models.Subtask, requestUserI
 }
 
 // DeleteSubtask deletes a subtask if the user is an admin of the associated task.
-func (sr *subtaskRepository) DeleteSubtask(subtask *models.Subtask, requestUserID uint) (uint, error) {
+func (sr *subtaskRepository) DeleteSubtask(subtaskID uint, requestUserID uint) (uint, error) {
+
+	var subtask models.Subtask
+	if err := sr.DB.First(&subtask, subtaskID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, gorm.ErrRecordNotFound
+		}
+		return 0, err
+	}
+
 	// Check if the user has admin permission for the task
 	if !sr.permissionRepo.CheckUserIsAdminOfProject(subtask.TaskID, requestUserID) {
 		return 0, errors.New("you don't have access to the project")
