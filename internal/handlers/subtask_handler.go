@@ -116,7 +116,7 @@ func (sh *subtaskHandler) UpdateSubtask(ctx *fiber.Ctx) error {
 		})
 	}
 
-	requestUserID := ctx.Locals("userID").(uint) // Assume user_id is set in middleware
+	requestUserID := ctx.Locals("userID").(uint)
 
 	subtaskID, err := sh.repository.UpdateSubtask(&subtask, requestUserID)
 	if err != nil {
