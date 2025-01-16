@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"mizito/internal/database"
 	"mizito/internal/repositories/utils"
@@ -14,6 +15,7 @@ type TaskRepository interface {
 	GetTaskByID(taskID uint, requestUserID uint) (*models.Task, error)
 	UpdateTask(task *models.Task, requestUserID uint) (uint, error)
 	DeleteTask(taskID uint, requestUserID uint) (uint, error)
+	AssignTask(UserID uint, TaskTitle uint, requestUserID uint) error
 }
 
 type taskRepository struct {
@@ -154,4 +156,44 @@ func (tr *taskRepository) DeleteTask(taskID uint, requestUserID uint) (uint, err
 	// Delete the task from the database
 	err = tr.DB.Delete(&task).Error
 	return task.ID, err
+}
+
+func (tr *taskRepository) AssignTask(userID uint, taskID uint, requestUserID uint) error {
+	if !tr.permissionRepo.CheckUserIsAdminOfTask(taskID, requestUserID) {
+		return errors.New("only admins can update the project")
+	}
+
+	var task models.Task
+	if err := tr.DB.Preload("Project").First(&task, taskID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("task with ID %d does not exist", taskID)
+		}
+		return fmt.Errorf("failed to fetch task: %w", err)
+	}
+
+	var project models.Project
+	if err := tr.DB.Preload("ProjectMembers").First(&project, task.ProjectID).Error; err != nil {
+		return fmt.Errorf("failed to fetch project: %w", err)
+	}
+
+	isMember := false
+	var user models.User
+	for _, member := range project.ProjectMembers {
+		if member.ID == userID {
+			user = member
+			isMember = true
+			break
+		}
+	}
+
+	if !isMember {
+		return fmt.Errorf("user with ID %d is not a member of the project associated with task %d", userID, taskID)
+	}
+
+	task.Members = append(task.Members, user)
+	if err := tr.DB.Save(&task).Error; err != nil {
+		return fmt.Errorf("failed to assign task to user: %w", err)
+	}
+
+	return nil
 }

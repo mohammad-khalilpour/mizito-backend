@@ -13,7 +13,8 @@ func InitTask(r *Router, postgreSql *database.DatabaseHandler) {
 	TaskApp.Get("/:task_id", tHandler.GetTaskByID)
 	TaskApp.Put("/:task_id", tHandler.UpdateTask)
 	TaskApp.Delete("/:task_id", tHandler.DeleteTask)
+	TaskApp.Put("/assign_task", tHandler.AssignTask)
 
-	subtaskApp := r.App.Group("task")
-	subtaskApp.Post("/:task_id", tHandler.CreateTask)
+	subtaskApp := r.App.Group("/task")
+	subtaskApp.Post("/", tHandler.CreateTask)
 }

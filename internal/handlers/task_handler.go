@@ -16,6 +16,7 @@ type TaskHandler interface {
 	GetTaskByID(ctx *fiber.Ctx) error
 	UpdateTask(ctx *fiber.Ctx) error
 	DeleteTask(ctx *fiber.Ctx) error
+	AssignTask(ctx *fiber.Ctx) error
 }
 
 type taskHandler struct {
@@ -113,4 +114,36 @@ func (th *taskHandler) DeleteTask(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(fiber.Map{"deleted_task_id": deletedTaskID})
+}
+
+func (th *taskHandler) AssignTask(ctx *fiber.Ctx) error {
+	type RequestBody struct {
+		UserID uint `json:"userID" validate:"required"`
+		TaskID uint `json:"taskID" validate:"required"`
+	}
+	requestUserID := ctx.Locals("userID").(uint)
+
+	var requestBody RequestBody
+	if err := ctx.BodyParser(&requestBody); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Failed to parse request body",
+		})
+	}
+
+	if requestBody.UserID == 0 || requestBody.TaskID == 0 {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "UserID and TaskID are required",
+		})
+	}
+	var err error
+	err = th.repository.AssignTask(requestBody.UserID, requestBody.TaskID, requestUserID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Task successfully assigned to the user",
+	})
 }

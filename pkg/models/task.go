@@ -12,7 +12,7 @@ type Task struct {
 	Members            []User    `gorm:"many2many:task_members;"`
 	DueDate            time.Time
 	Reports            []Report `gorm:"foreignKey:TaskID"`
-	ProgressPercentage int      `validator:"gte=0;lte=100"`
+	ProgressPercentage int      `validator:"gte=0;lte=100" gorm:"default:0"`
 }
 
 type Report struct {

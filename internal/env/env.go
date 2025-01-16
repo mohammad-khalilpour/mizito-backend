@@ -14,6 +14,6 @@ type Config struct {
 	PostgresPort        string `envDefault:"5432"`
 	PostgresUser        string `envDefault:"postgres"`
 	PostgresPass        string `envDefault:"postgres"`
-	PostgresDatabase    string `envDefault:"postgres"`
+	PostgresDatabase    string `envDefault:"mizito"`
 	MongoDBHost         string `envDefault:"mongodb://localhost:27017"`
 }

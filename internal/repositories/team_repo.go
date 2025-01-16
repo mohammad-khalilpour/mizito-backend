@@ -108,7 +108,7 @@ func (tr *teamRepository) AddUsersToTeam(usernames []string, teamID uint, role m
 		}
 
 		var existingMember models.TeamMember
-		err := tx.Where("user_id = ? AND team_id = ?", team.ID, teamID).First(&existingMember).Error
+		err := tx.Where("user_id = ? AND team_id = ?", user.ID, teamID).First(&existingMember).Error
 		if err == nil {
 			existingMember.Role = role
 			if err := tx.Save(&existingMember).Error; err != nil {

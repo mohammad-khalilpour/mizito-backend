@@ -20,7 +20,6 @@ type ProjectHandler interface {
 	GetProjectsByUser(ctx *fiber.Ctx) error
 	GetUsersByProjectID(ctx *fiber.Ctx) error
 	AddUserToProject(ctx *fiber.Ctx) error
-	AssignTask(ctx *fiber.Ctx) error
 }
 
 func NewProjectHandler(db *database.DatabaseHandler) ProjectHandler {
@@ -218,37 +217,5 @@ func (pr *projectHandler) AddUserToProject(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "User added to the project successfully",
-	})
-}
-
-func (pr *projectHandler) AssignTask(ctx *fiber.Ctx) error {
-	type RequestBody struct {
-		UserID uint `json:"userID" validate:"required"`
-		TaskID uint `json:"taskID" validate:"required"`
-	}
-	requestUserID := ctx.Locals("userID").(uint)
-
-	var requestBody RequestBody
-	if err := ctx.BodyParser(&requestBody); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to parse request body",
-		})
-	}
-
-	if requestBody.UserID == 0 || requestBody.TaskID == 0 {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "UserID and TaskID are required",
-		})
-	}
-	var err error
-	err = pr.repository.AssignTask(requestBody.UserID, requestBody.TaskID, requestUserID)
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Task successfully assigned to the user",
 	})
 }
