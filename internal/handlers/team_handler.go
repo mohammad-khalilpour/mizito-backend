@@ -66,9 +66,6 @@ func (h *teamHandler) CreateTeam(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Optionally, handle initial members
-	// Example: team.Members = [...] (already handled in repository)
-
 	teamID, err := h.repo.CreateTeam(&team, requestUserID)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -129,17 +126,10 @@ func (h *teamHandler) GetProjectsByTeam(ctx *fiber.Ctx) error {
 
 // AddUsersToTeam adds users to a team with a specified role
 func (h *teamHandler) AddUsersToTeam(ctx *fiber.Ctx) error {
-	teamIDParam := ctx.Params("id")
-	teamID, err := strconv.ParseUint(teamIDParam, 10, 32)
-	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid team ID",
-		})
-	}
-
 	var payload struct {
-		UserIDs []uint      `json:"user_ids" validate:"required,min=1"`
-		Role    models.Role `json:"role" validate:"required,oneof=admin member"`
+		ID        uint        `json:"id" validate:"required"`
+		Usernames []string    `json:"usernames" validate:"required,min=1"`
+		Role      models.Role `json:"role" validate:"required,oneof=admin member"`
 	}
 
 	// Parse request body
@@ -150,13 +140,13 @@ func (h *teamHandler) AddUsersToTeam(ctx *fiber.Ctx) error {
 	}
 
 	// Validate payload
-	if len(payload.UserIDs) == 0 || payload.Role == "" {
+	if len(payload.Usernames) == 0 || payload.Role == "" {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "User IDs and role are required",
 		})
 	}
 
-	addedCount, err := h.repo.AddUsersToTeam(payload.UserIDs, uint(teamID), payload.Role)
+	addedCount, err := h.repo.AddUsersToTeam(payload.Usernames, payload.ID, payload.Role)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": fmt.Sprintf("Failed to add users to team: %v", err),

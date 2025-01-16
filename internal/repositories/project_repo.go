@@ -10,7 +10,7 @@ import (
 )
 
 type ProjectCrudRepo interface {
-	CreateProject(project *models.Project) (uint, error)
+	CreateProject(project *models.Project, requestUserID uint) (uint, error)
 	UpdateProject(projectID uint, project *models.Project, requestUserID uint) (uint, error)
 	DeleteProject(projectID uint, requestUserID uint) (uint, error)
 	GetProjectByID(projectID uint, requestUserID uint) (*models.Project, error)
@@ -69,10 +69,37 @@ func (ph *projectRepository) GetProjectsByUser(userID uint) ([]models.Project, e
 	return projects, nil
 }
 
-func (ph *projectRepository) CreateProject(project *models.Project) (uint, error) {
-	if err := ph.DB.Create(project).Error; err != nil {
+func (ph *projectRepository) CreateProject(project *models.Project, requestUserID uint) (uint, error) {
+	if !ph.permissionRepo.CheckUserIsAdminOfTeam(requestUserID, project.TeamID) {
+		return 0, errors.New("you are not an admin of the team")
+	}
+
+	tx := ph.DB.Begin()
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Create the project within the transaction
+	if err := tx.Create(project).Error; err != nil {
+		tx.Rollback()
 		return 0, err
 	}
+
+	// Add the user to the project as a member within the transaction
+	if err := tx.Model(project).Association("ProjectMembers").Append(&models.User{ID: requestUserID}); err != nil {
+		tx.Rollback()
+		return 0, fmt.Errorf("failed to add user to project: %w", err)
+	}
+
+	// Commit the transaction if everything is successful
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
 	return project.ID, nil
 }
 

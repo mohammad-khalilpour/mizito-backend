@@ -33,18 +33,7 @@ type projectHandler struct {
 }
 
 func (pr *projectHandler) GetProjectsByUser(ctx *fiber.Ctx) error {
-	type RequestBody struct {
-		UserID uint `json:"userID"`
-	}
-
-	var requestBody RequestBody
-	if err := ctx.BodyParser(&requestBody); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to parse request body",
-		})
-	}
-
-	userID := requestBody.UserID
+	userID := ctx.Locals("userID").(uint)
 
 	projects, repoErr := pr.repository.GetProjectsByUser(userID)
 	if repoErr != nil {
@@ -83,6 +72,7 @@ func (pr *projectHandler) GetUsersByProjectID(ctx *fiber.Ctx) error {
 }
 
 func (pr *projectHandler) CreateProject(ctx *fiber.Ctx) error {
+	userID := ctx.Locals("userID").(uint)
 	project := new(models.Project)
 	if err := ctx.BodyParser(project); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -90,7 +80,7 @@ func (pr *projectHandler) CreateProject(ctx *fiber.Ctx) error {
 		})
 	}
 
-	projectID, repoErr := pr.repository.CreateProject(project)
+	projectID, repoErr := pr.repository.CreateProject(project, userID)
 	if repoErr != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": repoErr.Error(),
