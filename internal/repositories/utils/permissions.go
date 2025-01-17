@@ -104,10 +104,6 @@ func (ph *permissionRepository) CheckUserIsAdminOfTask(taskId uint, userId uint)
 		return true
 	}
 
-	// Optionally, check for task-specific admin roles if applicable
-	// For example, if there's a TaskMember model with roles
-	// Adjust according to your actual data model
-
 	return false
 }
 

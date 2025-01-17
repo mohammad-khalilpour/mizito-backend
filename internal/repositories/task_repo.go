@@ -30,7 +30,7 @@ func NewTaskRepository(postgreSql *database.DatabaseHandler) TaskRepository {
 
 func (tr *taskRepository) GetTasksByProject(projectID uint, requestUserID uint) ([]models.Task, error) {
 	// Check if the user has permission to view tasks for the project
-	if !tr.permissionRepo.CheckUserHasAccessToTask(projectID, requestUserID) {
+	if !tr.permissionRepo.CheckUserHasAccessToProject(projectID, requestUserID) {
 		return nil, errors.New("you don't have access to the project")
 	}
 
@@ -164,7 +164,7 @@ func (tr *taskRepository) AssignTask(userID uint, taskID uint, requestUserID uin
 	}
 
 	var task models.Task
-	if err := tr.DB.Preload("Project").First(&task, taskID).Error; err != nil {
+	if err := tr.DB.First(&task, taskID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fmt.Errorf("task with ID %d does not exist", taskID)
 		}

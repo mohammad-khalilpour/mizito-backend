@@ -27,7 +27,7 @@ type Subtask struct {
 	ID          uint `gorm:"primaryKey"`
 	TaskID      uint
 	Title       string `validate:"required"`
-	IsCompleted bool
+	IsCompleted bool   `gorm:"default:False"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

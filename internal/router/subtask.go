@@ -14,6 +14,6 @@ func InitSubtask(r *Router, postgreSql *database.DatabaseHandler) {
 	SubtasksApp.Put("/:subtask_id", sHandler.UpdateSubtask)
 	SubtasksApp.Delete("/:subtask_id", sHandler.DeleteSubtask)
 
-	subtaskApp := r.App.Group("project")
-	subtaskApp.Post("/subtask:subtask_id", sHandler.CreateSubtask)
+	subtaskApp := r.App.Group("/subtask")
+	subtaskApp.Post("", sHandler.CreateSubtask)
 }

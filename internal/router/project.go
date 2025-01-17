@@ -14,7 +14,8 @@ func InitProject(r *Router, postgreSql *database.DatabaseHandler) {
 	projectsApp.Get("/:project_id", pHandler.GetProjectByID)
 	projectsApp.Put("/:project_id", pHandler.UpdateProject)
 	projectsApp.Delete("/:project_id", pHandler.DeleteProject)
-	projectsApp.Put("/:project_id/users", pHandler.GetUsersByProjectID)
+	projectsApp.Get("/:project_id/users", pHandler.GetUsersByProjectID)
+	projectsApp.Put("/:project_id/users", pHandler.AddUserToProject)
 
 	projectApp := r.App.Group("/project")
 	projectApp.Post("", pHandler.CreateProject)
